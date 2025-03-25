@@ -1,0 +1,131 @@
+openapi: 3.0.3
+info:
+  title: API de Precios
+  version: "1.0.0"
+  description: >
+    API para obtener la información del precio final (pvp) y la tarifa aplicable a un producto
+    para una fecha determinada, identificando el producto y la cadena (brand). 
+    Se utiliza una base de datos en memoria H2 inicializada con los datos de ejemplo del ejercicio.
+servers:
+  - url: http://localhost:8080
+    description: Servidor local
+
+paths:
+  /prices:
+    get:
+      summary: Consulta de precio para un producto en una fecha determinada
+      description: >
+        Retorna la información del precio aplicable para un producto de una cadena en un rango de fechas,
+        considerando los parámetros:
+          - Identificador del producto (productId),
+          - Identificador de la cadena/brand (brandId).
+          - Fecha de aplicación (applicationDate),
+      parameters:
+        - $ref: '#/components/parameters/productId'
+        - $ref: '#/components/parameters/brandId'
+        - $ref: '#/components/parameters/applicationDate'
+      responses:
+        '200':
+          description: "Respuesta exitosa con los detalles del precio."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceResponse'
+        '400':
+          description: "Parámetros de entrada inválidos."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: "No se encontró precio para los parámetros indicados."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Precios
+
+components:
+  parameters:
+    productId:
+      name: productId
+      in: query
+      description: "Identificador del producto."
+      required: true
+      schema:
+        type: integer
+        format: int64
+    brandId:
+      name: brandId
+      in: query
+      description: "Identificador de la cadena/brand (por ejemplo: 1 para ZARA)."
+      required: true
+      schema:
+        type: integer
+        format: int64
+    applicationDate:
+      name: applicationDate
+      in: query
+      description: "Fecha y hora de aplicación en formato `YYYY-MM-DD HH:MM:SS` (sin zona horaria)."
+      required: true
+      schema:
+        type: string
+  schemas:
+    PriceResponse:
+      type: object
+      properties:
+        productId:
+          type: integer
+          description: "Identificador del producto."
+        brandId:
+          type: integer
+          description: "Identificador de la cadena/brand."
+        priceList:
+          type: integer
+          description: "Identificador de la tarifa de precios aplicada."
+        startDate:
+          type: string
+          format: local-date-time
+          description: "Fecha y hora de inicio de la tarifa en formato `YYYY-MM-DD HH:MM:SS`."
+        endDate:
+          type: string
+          format: local-date-time
+          description: "Fecha y hora de fin de la tarifa en formato `YYYY-MM-DD HH:MM:SS`."
+        price:
+          type: number
+          format: double
+          description: "Precio final a aplicar."
+      required:
+        - productId
+        - brandId
+        - priceList
+        - startDate
+        - endDate
+        - price
+
+    Error:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: "Fecha y hora en que se produjo el error."
+        status:
+          type: integer
+          description: "Código de estado HTTP."
+        error:
+          type: string
+          description: "Tipo de error."
+        message:
+          type: string
+          description: "Mensaje descriptivo del error."
+        path:
+          type: string
+          description: "Ruta que generó el error."
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
